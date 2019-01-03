@@ -1,0 +1,31 @@
+{
+  "name": "graphql",
+  "version": "0.0.0",
+  "description": "using vs code project",
+  "main": "index.js",
+  "engines": {
+    "node": "^8.9.4",
+    "npm": "^5.6.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node ./dist/index.js"
+  },
+  "devDependencies": {
+    "@types/express": "^4.16.0"
+  },
+  "dependencies": {
+    "apollo-server-express": "^2.3.1",
+    "express": "4.16.0",
+    "reflect-metadata": "^0.1.12",
+    "type-graphql": "^0.16.0",
+    "typedi": "^0.8.0",
+    "typescript": "3.2.2"
+  },
+  "keywords": [
+    "vs"
+  ],
+  "author": "kishe56@gmail.com",
+  "license": "MIT"
+}
