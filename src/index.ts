@@ -17,7 +17,6 @@ async function boot(){
     age: Int
   }
   `;
-
   
   // Provide resolver functions for your schema fields
   const resolvers = {
