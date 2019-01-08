@@ -48,5 +48,4 @@ async function boot(){
 
   console.log(`🚀 Server ready at http://localhost:3000${apolloServer.graphqlPath}`)
 }
-
 boot()
