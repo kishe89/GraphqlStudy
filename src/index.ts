@@ -1,52 +1,43 @@
-import express from "express";
-import {ApolloServer,gql} from "apollo-server-express";
-
-
-async function boot(){
-  const app = express();
-  const port = 3000;
-
-  // Construct a schema, using GraphQL schema language
-  const typeDefs = gql`
-  type Query {
-    hello: String
-    people: [Person]
-  }
-  type Person{
-    name: String
-    age: Int
-  }
-  `;
-
-  
-  // Provide resolver functions for your schema fields
-  const resolvers = {
-    Query: {
-      hello: () => 'hello world',
-      people: () => {
-        return [{
-          name: "Davidkim",
-          age: 18
-        },{
-          name: "Alice",
-          age: 18
-        }]
-      }
-    }
-  };
-  const apolloServer = new ApolloServer({
-    typeDefs,
-    resolvers,
-    playground:true,
-    tracing: true
+import 'reflect-metadata'
+import express from 'express'
+import { ApolloServer, gql } from 'apollo-server-express'
+import UserResolver from './resolvers/UserResolver'
+import { buildSchema } from 'type-graphql'
+import mongoose from 'mongoose'
+import { UserSchema } from './schemas/user'
+import { ObjectIdScalar } from './scalars/ObjectId'
+import { ObjectId } from 'mongodb'
+import dotenv from 'dotenv'
+dotenv.config()
+async function boot() {
+  const app = express()
+  const port = 3000
+  mongoose.model('User', UserSchema)
+  const db = await mongoose.connect(process.env.MONGOURL,
+    {
+      autoReconnect: true,
+      useNewUrlParser: true,
+    })
+  const resolvers = await buildSchema({
+    resolvers: [UserResolver],
+    scalarsMap: [{ type: ObjectId, scalar: ObjectIdScalar }],
   })
-  apolloServer.applyMiddleware({app});
-  try{
+  const apolloServer = new ApolloServer({
+    schema: resolvers,
+    playground: true,
+    tracing: true,
+  })
+  apolloServer.applyMiddleware({ app })
+  try {
     await app.listen(port)
-  }catch(e){
-    console.log(e);
+    return apolloServer
+  } catch (e) {
+    throw e;
   }
-
-  console.log(`🚀 Server ready at http://localhost:3000${apolloServer.graphqlPath}`)
 }
-boot()
+boot().then((server) => {
+  console.log(`🚀 Server ready at http://localhost:3000${server.graphqlPath}`)
+}).catch((error) => {
+  console.log(`error : ${error}`)
+  
+})

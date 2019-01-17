@@ -3,51 +3,46 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("reflect-metadata");
 const express_1 = __importDefault(require("express"));
 const apollo_server_express_1 = require("apollo-server-express");
+const UserResolver_1 = __importDefault(require("./resolvers/UserResolver"));
+const type_graphql_1 = require("type-graphql");
+const mongoose_1 = __importDefault(require("mongoose"));
+const user_1 = require("./schemas/user");
+const ObjectId_1 = require("./scalars/ObjectId");
+const mongodb_1 = require("mongodb");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 async function boot() {
     const app = express_1.default();
     const port = 3000;
-    // Construct a schema, using GraphQL schema language
-    const typeDefs = apollo_server_express_1.gql `
-  type Query {
-    hello: String
-    people: [Person]
-  }
-  type Person{
-    name: String
-    age: Int
-  }
-  `;
-    // Provide resolver functions for your schema fields
-    const resolvers = {
-        Query: {
-            hello: () => 'hello world',
-            people: () => {
-                return [{
-                        name: "Davidkim",
-                        age: 18
-                    }, {
-                        name: "Alice",
-                        age: 18
-                    }];
-            }
-        }
-    };
+    mongoose_1.default.model('User', user_1.UserSchema);
+    const db = await mongoose_1.default.connect(process.env.MONGOURL, {
+        autoReconnect: true,
+        useNewUrlParser: true,
+    });
+    const resolvers = await type_graphql_1.buildSchema({
+        resolvers: [UserResolver_1.default],
+        scalarsMap: [{ type: mongodb_1.ObjectId, scalar: ObjectId_1.ObjectIdScalar }],
+    });
     const apolloServer = new apollo_server_express_1.ApolloServer({
-        typeDefs,
-        resolvers,
+        schema: resolvers,
         playground: true,
-        tracing: true
+        tracing: true,
     });
     apolloServer.applyMiddleware({ app });
     try {
         await app.listen(port);
+        return apolloServer;
     }
     catch (e) {
-        console.log(e);
+        throw e;
     }
-    console.log(`🚀 Server ready at http://localhost:3000${apolloServer.graphqlPath}`);
 }
-boot();
+boot().then((server) => {
+    console.log(`🚀 Server ready at http://localhost:3000${server.graphqlPath}`);
+}).catch((error) => {
+    console.log(`error : ${error}`);
+});
 //# sourceMappingURL=index.js.map
