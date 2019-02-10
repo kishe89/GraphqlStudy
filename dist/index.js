@@ -13,22 +13,29 @@ const user_1 = require("./schemas/user");
 const ObjectId_1 = require("./scalars/ObjectId");
 const mongodb_1 = require("mongodb");
 const dotenv_1 = __importDefault(require("dotenv"));
+const WorkspaceResolver_1 = __importDefault(require("./resolvers/WorkspaceResolver"));
+const workspace_1 = require("./schemas/workspace");
+const ApolloContext_1 = require("./context/ApolloContext");
+const AuthChecker_1 = require("./validator/AuthChecker");
 dotenv_1.default.config();
 async function boot() {
     const app = express_1.default();
     const port = 3000;
     mongoose_1.default.model('User', user_1.UserSchema);
+    mongoose_1.default.model('Workspace', workspace_1.WorkspaceSchema);
     const db = await mongoose_1.default.connect(process.env.MONGOURL, {
         autoReconnect: true,
         useNewUrlParser: true,
     });
     const resolvers = await type_graphql_1.buildSchema({
-        resolvers: [UserResolver_1.default],
+        resolvers: [UserResolver_1.default, WorkspaceResolver_1.default],
         scalarsMap: [{ type: mongodb_1.ObjectId, scalar: ObjectId_1.ObjectIdScalar }],
+        authChecker: AuthChecker_1.ApolloAuthChecker
     });
     const apolloServer = new apollo_server_express_1.ApolloServer({
+        context: ApolloContext_1.ApolloContext,
         schema: resolvers,
-        playground: true,
+        playground: false,
         tracing: true,
     });
     apolloServer.applyMiddleware({ app });
